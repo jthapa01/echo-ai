@@ -1,7 +1,7 @@
 const Page = () => {
     return (
         <div>
-            Test page!
+            Test page for auth and org!
         </div>
     );
 }
