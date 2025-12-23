@@ -1,12 +1,11 @@
-import { AuthGuard } from "@/modules/auth/ui/components/auth-guard";
-import { OrganizationGuard } from "@/modules/auth/ui/components/organization-guard";
+import { DashboardLayout } from "@/modules/dashboard/ui/layouts/dashboard-layout";
 
-const layout = ({ children }: { children: React.ReactNode }) => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
-        <AuthGuard>
-            <OrganizationGuard>{children}</OrganizationGuard>
-        </AuthGuard>
+        <DashboardLayout>
+            {children}
+        </DashboardLayout>
     );
 };
 
-export default layout;
+export default Layout;
