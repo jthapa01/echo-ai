@@ -9,7 +9,7 @@ import { useMutation } from "convex/react";
 import { api } from "@workspace/backend/_generated/api";
 import { Doc } from "@workspace/backend/_generated/dataModel";
 import { useAtomValue, useSetAtom } from "jotai";
-import { getContactSessionAtom, organizationIdAtom } from "../../atoms/widget-atoms";
+import { getContactSessionAtom, organizationIdAtom, screenAtom } from "../../atoms/widget-atoms";
 
 const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be at most 50 characters"),
@@ -19,6 +19,7 @@ const formSchema = z.object({
 export const WidgetAuthScreen = () => {
     const organizationId = useAtomValue(organizationIdAtom);
     const setContactSessionId = useSetAtom(getContactSessionAtom(organizationId || ""));
+    const setScreen = useSetAtom(screenAtom);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -55,6 +56,7 @@ export const WidgetAuthScreen = () => {
             metadata,
         });
         setContactSessionId(contactSessionId);
+        setScreen("selection");
     };
 
     return (
