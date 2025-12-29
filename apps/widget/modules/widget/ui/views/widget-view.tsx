@@ -7,12 +7,16 @@ import { WidgetErrorScreen } from "@/modules/widget/ui/screens/widget-error-scre
 import { WidgetLoadingScreen } from "@/modules/widget/ui/screens/widget-loading-screen";
 import { WidgetSelectionScreen } from "@/modules/widget/ui/screens/widget-selection-screen";
 import { WidgetChatScreen } from "@/modules/widget/ui/screens/widget-chat-screen";
+import { WidgetInboxScreen } from "../screens/widget-inbox-screen";
 
 interface WidgetViewProps {
     organizationId: string | null;
 };
 
 export const WidgetView = ({ organizationId }: WidgetViewProps) => {
+    // read current value from atom e.g. "loading", "chat", "inbox"
+    // Any screen can call setScreen to navigate to a different screen
+    // WidgetView re-renders → shows <WidgetAuthScreen /> etc based on current screen value
     const screen = useAtomValue(screenAtom);
     const screenComponents = {
         error: <WidgetErrorScreen />,
@@ -21,7 +25,7 @@ export const WidgetView = ({ organizationId }: WidgetViewProps) => {
         voice: <p>TODO: Voice</p>,
         contact: <p>TODO: Contact</p>,
         selection: <WidgetSelectionScreen />,
-        inbox: <p>TODO: Inbox</p>,
+        inbox: <WidgetInboxScreen />,
         chat: <WidgetChatScreen />,
     }
     return (
