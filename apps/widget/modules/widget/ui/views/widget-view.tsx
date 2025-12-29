@@ -14,7 +14,6 @@ interface WidgetViewProps {
 
 export const WidgetView = ({ organizationId }: WidgetViewProps) => {
     const screen = useAtomValue(screenAtom);
-    
     const screenComponents = {
         error: <WidgetErrorScreen />,
         loading: <WidgetLoadingScreen organizationId={organizationId} />,
