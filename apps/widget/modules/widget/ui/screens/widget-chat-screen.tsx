@@ -17,6 +17,9 @@ import { AIInput, AIInputSubmit, AIInputTextarea, AIInputToolbar, AIInputTools }
 import { AIMessage, AIMessageContent } from "@workspace/ui/components/ai/message";
 import { AIResponse } from "@workspace/ui/components/ai/response";
 import { AISuggestion, AISuggestions } from "@workspace/ui/components/ai/suggestion";
+import { DicebearAvatar } from "@workspace/ui/components/dicebear-avatar";
+import { useInfiniteScroll } from "@workspace/ui/hooks/use-infinite-scroll";
+import { InfiniteScrollTrigger } from "@workspace/ui/components/infinite-scroll-trigger";
 
 const formSchema = z.object({
     message: z.string().min(1, "Message cannot be empty").max(5000, "Message is too long"),
@@ -53,6 +56,12 @@ export const WidgetChatScreen = () => {
             : "skip",
         { initialNumItems: 10 },
     );
+
+    const { topElementRef, handleLoadMore, canLoadMore, isLoadingMore } = useInfiniteScroll({
+        status: messages.status,
+        loadMore: messages.loadMore,
+        loadSize: 10
+    });
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -91,12 +100,22 @@ export const WidgetChatScreen = () => {
             </WidgetHeader>
             <AIConversation>
                 <AIConversationContent>
+                    <InfiniteScrollTrigger
+                        canLoadMore={canLoadMore}
+                        isLoadingMore={isLoadingMore}
+                        onLoadMore={handleLoadMore}
+                        ref={topElementRef}
+                    />
                     {toUIMessages(messages.results ?? [])?.map((message) => {
                         return (
                             <AIMessage from={message.role === "user" ? "user" : "assistant"} key={message.id}>
                                 <AIMessageContent>
                                     <AIResponse>{message.content}</AIResponse>
                                 </AIMessageContent>
+                                {message.role === "assistant" && (
+                                    <DicebearAvatar imageUrl="/logo.svg" seed="assistant" size={32} />
+
+                                )}
                             </AIMessage>
                         );
                     })}
