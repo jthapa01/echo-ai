@@ -1,9 +1,12 @@
 import { CONTACT_SESSION_KEY } from './../../../../apps/widget/modules/widget/constants';
 import { ConvexError, v } from "convex/values";
 import { action, query } from "../_generated/server";
-import { internal } from "../_generated/api";
+import { internal, components } from "../_generated/api";
 import { supportAgent } from "../system/ai/agents/supportAgent";
 import { paginationOptsValidator } from "convex/server";
+import { escalateConversationTool } from "../system/ai/tools/escalateConversation";
+import { resolveConversationTool } from "../system/ai/tools/resolveConversation";
+import { saveMessage } from "@convex-dev/agent";
 
 export const create = action({
     args: {
@@ -44,14 +47,24 @@ export const create = action({
         }
 
         // TODO: Implement subscription check here
-
+        const shouldTriggerAgent = conversation.status === "unresolved";
         //This sends a message to the AI agent and gets a response.
-        await supportAgent.generateText(
-            ctx,
-            { threadId: args.threadId },
-            { prompt: args.prompt }
-        )
-    }
+        if(shouldTriggerAgent) {
+            await supportAgent.generateText(
+                ctx,
+                { threadId: args.threadId },
+                { 
+                    prompt: args.prompt,
+                    tools: {escalateConversationTool, resolveConversationTool}
+                }
+            )
+        } else {
+            await saveMessage(ctx, components.agent, {
+                threadId: args.threadId,
+                prompt: args.prompt,
+            });
+        }
+    },
 });
 
 export const getMany = query({
