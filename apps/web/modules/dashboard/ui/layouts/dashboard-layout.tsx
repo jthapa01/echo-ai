@@ -8,7 +8,8 @@ import { Provider } from "jotai";
 export const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
     const cookieStore = await cookies();
     // Using SIDEBAR_COOKIE_NAME from sidebar component does not work due to monorepo and SSR
-    const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+    // Default to open (true) if cookie doesn't exist
+    const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
     return (
         <AuthGuard>
