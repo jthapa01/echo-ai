@@ -7,6 +7,7 @@ import { paginationOptsValidator } from "convex/server";
 import { escalateConversationTool } from "../system/ai/tools/escalateConversation";
 import { resolveConversationTool } from "../system/ai/tools/resolveConversation";
 import { saveMessage } from "@convex-dev/agent";
+import { searchTool } from "../system/ai/tools/search";
 
 export const create = action({
     args: {
@@ -55,7 +56,12 @@ export const create = action({
                 { threadId: args.threadId },
                 { 
                     prompt: args.prompt,
-                    tools: {escalateConversationTool, resolveConversationTool}
+                    tools: 
+                    {
+                        escalateConversationTool,
+                        resolveConversationTool,
+                        searchTool,
+                    }
                 }
             )
         } else {
