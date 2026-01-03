@@ -1,4 +1,3 @@
-import { CONTACT_SESSION_KEY } from './../../../../apps/widget/modules/widget/constants';
 import { ConvexError, v } from "convex/values";
 import { action, query } from "../_generated/server";
 import { internal, components } from "../_generated/api";
