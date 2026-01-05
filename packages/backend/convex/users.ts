@@ -1,31 +1,24 @@
 import { query, mutation } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
 
 export const getMany = query({
-    args: {},
-    handler: async (ctx) => {
-        const users = await ctx.db.query("users").collect();
-        return users;
-    },
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+    return users;
+  },
 });
 
 export const add = mutation({
-    args: {},
-    handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Not authenticated");
-        }
+  args: {},
+  handler: async (ctx) => {
+    const { orgId } = await requireAuth(ctx);
 
-        const orgId = identity.orgId as string;
-        if(!orgId){
-            throw new Error("Missing organization ID");
-        }
+    throw new Error("Tracking test");
 
-        throw new Error("Tracking test");
-        
-        const userId = await ctx.db.insert("users", {
-            name: "John Doe",
-        });
-        return userId;
-    },
+    const userId = await ctx.db.insert("users", {
+      name: "John Doe",
+    });
+    return userId;
+  },
 });
