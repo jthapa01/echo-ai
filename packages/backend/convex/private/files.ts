@@ -12,6 +12,7 @@ import { extractTextContent } from "../lib/extractTextContent";
 import rag from "../system/ai/rag";
 import { Id } from "../_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
+import { requireAuth } from "../lib/auth";
 
 function guessMimeType(filename: string, bytes: ArrayBuffer): string {
   return (
@@ -26,21 +27,7 @@ export const deleteFile = mutation({
     entryId: vEntryId,
   },
   handler: async (ctx, args) => {
-    const getUserIdentity = await ctx.auth.getUserIdentity();
-    if (!getUserIdentity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must be authenticated to delete files.",
-      });
-    }
-
-    const orgId = getUserIdentity.orgId as string;
-    if (!orgId) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must belong to an organization to delete files.",
-      });
-    }
+    const { orgId } = await requireAuth(ctx);
 
     const namespace = await rag.getNamespace(ctx, { namespace: orgId });
     if (!namespace) {
@@ -83,21 +70,7 @@ export const addFile = action({
     category: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const getUserIdentity = await ctx.auth.getUserIdentity();
-    if (!getUserIdentity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must be authenticated to upload files.",
-      });
-    }
-
-    const orgId = getUserIdentity.orgId as string;
-    if (!orgId) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must belong to an organization to upload files.",
-      });
-    }
+    const { orgId } = await requireAuth(ctx);
 
     const { bytes, filename, category } = args;
     const mimeType = args.mimeType || guessMimeType(filename, bytes);
@@ -148,21 +121,7 @@ export const list = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const getUserIdentity = await ctx.auth.getUserIdentity();
-    if (!getUserIdentity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must be authenticated to list files.",
-      });
-    }
-
-    const orgId = getUserIdentity.orgId as string;
-    if (!orgId) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must belong to an organization to list files.",
-      });
-    }
+    const { orgId } = await requireAuth(ctx);
 
     const namespace = await rag.getNamespace(ctx, { namespace: orgId });
     if (!namespace) {

@@ -7,27 +7,15 @@ import { saveMessage } from "@convex-dev/agent";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { OPERATOR_MESSAGE_ENHANCEMENT_PROMPT } from "../system/ai/constants";
+import { requireAuth } from "../lib/auth";
 
 export const enhanceResponse = action({
   args: {
     prompt: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must be authenticated to enhance responses.",
-      });
-    }
+    await requireAuth(ctx);
 
-    const orgId = identity.orgId as string;
-    if (!orgId) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must belong to an organization to enhance responses.",
-      });
-    }
     // Call the AI service to enhance the response
     const response = await generateText({
       model: openai("gpt-4o-mini"),
@@ -52,22 +40,7 @@ export const create = mutation({
     conversationId: v.id("conversations"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must be authenticated to create messages.",
-      });
-    }
-
-    const orgId = identity.orgId as string;
-    if (!orgId) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must belong to an organization to create messages.",
-      });
-    }
+    const { orgId, identity } = await requireAuth(ctx);
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -91,8 +64,8 @@ export const create = mutation({
       });
     }
 
-    if(conversation.status === "unresolved") {
-        await ctx.db.patch(args.conversationId, { status: "escalated", });
+    if (conversation.status === "unresolved") {
+      await ctx.db.patch(args.conversationId, { status: "escalated" });
     }
 
     await saveMessage(ctx, components.agent, {
@@ -113,21 +86,7 @@ export const getMany = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must be authenticated to fetch messages",
-      });
-    }
-
-    const orgId = identity.orgId as string;
-    if (!orgId) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User must belong to an organization to fetch messages.",
-      });
-    }
+    const { orgId } = await requireAuth(ctx);
 
     const conversation = await ctx.db
       .query("conversations")
