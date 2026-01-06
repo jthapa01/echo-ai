@@ -19,7 +19,7 @@
  */
 
 import { v } from "convex/values";
-import { internalMutation } from "../_generated/server";
+import { internalMutation, internalQuery } from "../_generated/server";
 
 /**
  * Internal mutation to upsert a plugin record in the database
@@ -94,6 +94,27 @@ export const remove = internalMutation({
   },
 });
 
+/**
+ * Internal query to get a plugin by organization and service
+ */
+export const getByOrganizationIdAndService = internalQuery({
+  args: {
+    organizationId: v.string(),
+    service: v.union(
+      v.literal("vapi"),
+      v.literal("openai"),
+      v.literal("anthropic")
+    ),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("plugins")
+      .withIndex("by_organization_id_and_service", (q) =>
+        q.eq("organizationId", args.organizationId).eq("service", args.service)
+      )
+      .unique();
+  },
+});
 
 // Key Convex constraint:
 
