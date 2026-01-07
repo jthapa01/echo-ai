@@ -17,20 +17,28 @@ export const useVapiAssistants = (): {
     const fetchAssistants = useAction(api.private.vapi.getAssistants);
 
     useEffect(() => {
+        let cancelled = false;
         const fetchData = async () => {
             try {
                 setIsLoading(true);
                 const result = await fetchAssistants();
+                if (cancelled) return;
                 setData(result);
                 setError(null);
             } catch(err) {
+                if (cancelled) return;
                 setError(err as Error);
                 toast.error("Failed to fetch VAPI assistants.");
             } finally {
-                setIsLoading(false);
+                if(!cancelled) {
+                    setIsLoading(false);
+                }
             }
         };
         fetchData();
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     return { data, isLoading, error };
