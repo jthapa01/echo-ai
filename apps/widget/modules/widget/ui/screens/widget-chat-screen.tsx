@@ -4,7 +4,7 @@ import { WidgetHeader } from "@/modules/widget/ui/components/widget-header";
 import { Button } from "@workspace/ui/components/button";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ArrowLeftIcon, MenuIcon } from "lucide-react";
-import { getContactSessionAtom, conversationIdAtom, organizationIdAtom, screenAtom } from "../../atoms/widget-atoms";
+import { getContactSessionAtom, conversationIdAtom, organizationIdAtom, screenAtom, widgetSettingsAtom } from "../../atoms/widget-atoms";
 import { useAction, useQuery } from "convex/react";
 import { api } from "@workspace/backend/_generated/api";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { AISuggestion, AISuggestions } from "@workspace/ui/components/ai/suggest
 import { DicebearAvatar } from "@workspace/ui/components/dicebear-avatar";
 import { useInfiniteScroll } from "@workspace/ui/hooks/use-infinite-scroll";
 import { InfiniteScrollTrigger } from "@workspace/ui/components/infinite-scroll-trigger";
+import { useMemo } from "react";
 
 const formSchema = z.object({
     message: z.string().min(1, "Message cannot be empty").max(5000, "Message is too long"),
@@ -29,9 +30,23 @@ export const WidgetChatScreen = () => {
     const setScreen = useSetAtom(screenAtom); // setter fn
     const setConversationId = useSetAtom(conversationIdAtom);
 
-    const conversationId = useAtomValue(conversationIdAtom); // get the value
+    // get the in memory atom value
+    const conversationId = useAtomValue(conversationIdAtom);
     const organizationId = useAtomValue(organizationIdAtom);
     const contactSessionId = useAtomValue(getContactSessionAtom(organizationId || ""));
+    const widgetSettings = useAtomValue(widgetSettingsAtom);
+
+    // key as keyof typeof widgetSettings.defaultSuggestions
+    // Tells TS: key is "suggestion1" | "suggestion2" | "suggestion3"
+    const suggestions = useMemo(() => {
+        if (!widgetSettings) {
+            return [];
+        }
+
+        return Object.keys(widgetSettings.defaultSuggestions).map((key) => {
+            return widgetSettings.defaultSuggestions[key as keyof typeof widgetSettings.defaultSuggestions];
+        })
+    }, [widgetSettings]);
 
     const conversation = useQuery(api.public.conversations.getOne,
         conversationId && contactSessionId
@@ -48,7 +63,7 @@ export const WidgetChatScreen = () => {
     const messages = useThreadMessages(
         api.public.messages.getMany,
         conversation?.threadId && contactSessionId
-            ? 
+            ?
             {
                 threadId: conversation.threadId,
                 contactSessionId,
@@ -122,7 +137,29 @@ export const WidgetChatScreen = () => {
                     })}
                 </AIConversationContent>
             </AIConversation>
-            {/* TODO: Add suggestions */}
+            {toUIMessages(messages.results ?? [])?.length === 1 && (
+                <AISuggestions className="flex w-full flex-col items-end p-2">
+                    {suggestions.map((suggestion) => {
+                        if (!suggestion) {
+                            return null;
+                        }
+                        return (
+                            <AISuggestion
+                                key={suggestion}
+                                onClick={() => {
+                                    form.setValue("message", suggestion, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                        shouldTouch: true,
+                                    });
+                                    form.handleSubmit(onSubmit)();
+                                }}
+                                suggestion={suggestion}
+                            />
+                        );
+                    })}
+                </AISuggestions>
+            )}
             <Form {...form}>
                 <AIInput className="rounded-none border-x-0 border-b-0" onSubmit={form.handleSubmit(onSubmit)}>
                     <FormField
@@ -134,7 +171,7 @@ export const WidgetChatScreen = () => {
                                 disabled={conversation?.status === "resolved"}
                                 onChange={field.onChange}
                                 onKeyDown={(e) => {
-                                    if(e.key === "Enter" && !e.shiftKey){
+                                    if (e.key === "Enter" && !e.shiftKey) {
                                         e.preventDefault();
                                         form.handleSubmit(onSubmit)();
                                     }
@@ -146,15 +183,14 @@ export const WidgetChatScreen = () => {
                     />
                     <AIInputToolbar>
                         <AIInputTools />
-                        <AIInputSubmit 
+                        <AIInputSubmit
                             disabled={conversation?.status === "resolved" || !form.formState.isValid}
                             status="ready"
                             type="submit"
-                         />
+                        />
                     </AIInputToolbar>
                 </AIInput>
             </Form>
         </>
     );
 };
-
