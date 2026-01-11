@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { LoaderIcon } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { errorMessageAtom, screenAtom, loadingMessageAtom, organizationIdAtom, getContactSessionAtom, widgetSettingsAtom } from "@/modules/widget/atoms/widget-atoms";
+import { errorMessageAtom, screenAtom, loadingMessageAtom, organizationIdAtom, getContactSessionAtom, widgetSettingsAtom, vapiSecretsAtom } from "@/modules/widget/atoms/widget-atoms";
 import { WidgetHeader } from "@/modules/widget/ui/components/widget-header";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@workspace/backend/_generated/api";
@@ -21,6 +21,7 @@ export const WidgetLoadingScreen = ({ organizationId }: { organizationId: string
     const setOrganizationId = useSetAtom(organizationIdAtom);
     const loadingMessage = useAtomValue(loadingMessageAtom);
     const setWidgetSettings = useSetAtom(widgetSettingsAtom);
+    const setVapiSecrets = useSetAtom(vapiSecretsAtom);
 
     const contactSessionId = useAtomValue(getContactSessionAtom(organizationId || ""));
 
@@ -93,10 +94,32 @@ export const WidgetLoadingScreen = ({ organizationId }: { organizationId: string
 
         if(widgetSettings !== undefined) {
             setWidgetSettings(widgetSettings);
-            setStep("done");
+            setStep("vapi");
         }
     }, [step, widgetSettings, setLoadingMessage, setWidgetSettings]);
 
+    // step 4: Load Vapi Secrets (Optional)
+    const getVapiSecrets = useAction(api.public.secrets.getVapiSecrets);
+    useEffect(() => {
+        if(step !== "vapi") return;
+        
+        if(!organizationId) {
+            setErrorMessage("Organization ID is missing");
+            setScreen("error");
+            return;
+        }
+        setLoadingMessage("Loading voice assistant features...");
+        getVapiSecrets({ organizationId })
+            .then((secrets) => {
+                setVapiSecrets(secrets);
+                setStep("done");
+            })
+            .catch(() => {
+                setVapiSecrets(null);
+                setStep("done");
+            });
+
+    }, [step, organizationId, setLoadingMessage, setVapiSecrets, getVapiSecrets, setStep]);
 
     useEffect(() => {
         if(step !== "done") return;
