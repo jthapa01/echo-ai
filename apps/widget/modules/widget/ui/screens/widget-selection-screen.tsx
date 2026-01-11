@@ -85,7 +85,7 @@ export const WidgetSelectionScreen = () => {
                         <ChevronRightIcon />
                     </Button>
                 )}
-                {hasVapiSecrets && !widgetSettings?.vapiSettings?.phoneNumber && (
+                {hasVapiSecrets && widgetSettings?.vapiSettings?.phoneNumber && (
                     <Button 
                         className="h-16 w-full justify-between"
                         variant="outline"
