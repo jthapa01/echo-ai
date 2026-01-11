@@ -210,6 +210,37 @@ export async function getOrgSecret(
 }
 
 /**
+ * Retrieve a secret by its full name and parse as JSON
+ * @param secretName - The full secret name in Key Vault
+ * @returns Parsed JSON object with publicApiKey and privateApiKey, or null if not found
+ */
+export async function getSecretJsonByName(
+  secretName: string
+): Promise<{ publicApiKey: string; privateApiKey: string } | null> {
+  const client = getSecretClient();
+
+  try {
+    const secret = await client.getSecret(secretName);
+    if (!secret.value) {
+      return null;
+    }
+    const parsed = JSON.parse(secret.value);
+    if (!parsed.publicApiKey || !parsed.privateApiKey) {
+      return null;
+    }
+    return {
+      publicApiKey: parsed.publicApiKey,
+      privateApiKey: parsed.privateApiKey,
+    };
+  } catch (error: unknown) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
  * Retrieve a generic secret as parsed JSON object
  * @param orgId - The organization ID
  * @param secretType - Type identifier (e.g., "vapi", "openai")
