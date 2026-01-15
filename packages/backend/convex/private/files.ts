@@ -12,7 +12,7 @@ import { extractTextContent } from "../lib/extractTextContent";
 import rag from "../system/ai/rag";
 import { Id } from "../_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
-import { requireAuth } from "../lib/auth";
+import { getAuth, requireAuth } from "../lib/auth";
 
 function guessMimeType(filename: string, bytes: ArrayBuffer): string {
   return (
@@ -121,7 +121,12 @@ export const list = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const { orgId } = await requireAuth(ctx);
+    const auth = await getAuth(ctx);
+    if (!auth) {
+      // Return empty result during org switching or when not authenticated
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+    const { orgId } = auth;
 
     const namespace = await rag.getNamespace(ctx, { namespace: orgId });
     if (!namespace) {

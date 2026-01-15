@@ -4,7 +4,7 @@ import { supportAgent } from "../system/ai/agents/supportAgent";
 import { MessageDoc } from "@convex-dev/agent";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 import { Doc } from "../_generated/dataModel";
-import { requireAuth } from "../lib/auth";
+import { getAuth, requireAuth } from "../lib/auth";
 
 export const updateStatus = mutation({
   args: {
@@ -44,7 +44,11 @@ export const getOne = query({
     conversationId: v.id("conversations"),
   },
   handler: async (ctx, args) => {
-    const { orgId: organizationId } = await requireAuth(ctx);
+    const auth = await getAuth(ctx);
+    if (!auth) {
+      return null;
+    }
+    const { orgId: organizationId } = auth;
 
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation) {
@@ -88,7 +92,11 @@ export const getMany = query({
     ),
   },
   handler: async (ctx, args) => {
-    const { orgId: organizationId } = await requireAuth(ctx);
+    const auth = await getAuth(ctx);
+    if (!auth) {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+    const { orgId: organizationId } = auth;
 
     let conversations: PaginationResult<Doc<"conversations">>;
     if (args.status) {

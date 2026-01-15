@@ -7,7 +7,7 @@ import { saveMessage } from "@convex-dev/agent";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { OPERATOR_MESSAGE_ENHANCEMENT_PROMPT } from "../system/ai/constants";
-import { requireAuth } from "../lib/auth";
+import { getAuth, requireAuth } from "../lib/auth";
 
 export const enhanceResponse = action({
   args: {
@@ -86,7 +86,11 @@ export const getMany = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const { orgId } = await requireAuth(ctx);
+    const auth = await getAuth(ctx);
+    if (!auth) {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+    const { orgId } = auth;
 
     const conversation = await ctx.db
       .query("conversations")

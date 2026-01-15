@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { requireAuth } from "../lib/auth";
+import { getAuth, requireAuth } from "../lib/auth";
 
 export const upsert = mutation({
     args: {
@@ -44,7 +44,11 @@ export const upsert = mutation({
 export const getOne = query({
     args: {},
     handler: async (ctx) => {
-        const { orgId } = await requireAuth(ctx);
+        const auth = await getAuth(ctx);
+        if (!auth) {
+            return null;
+        }
+        const { orgId } = auth;
         return await ctx.db
             .query("widgetSettings")
             .withIndex("by_organization_id", (q) => q.eq("organizationId", orgId))

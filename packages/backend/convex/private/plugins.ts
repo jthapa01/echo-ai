@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { requireAuth } from "../lib/auth";
+import { getAuth, requireAuth } from "../lib/auth";
 
 export const remove = mutation({
   args: {
@@ -40,7 +40,11 @@ export const getOne = query({
     ),
   },
   handler: async (ctx, args) => {
-    const { orgId } = await requireAuth(ctx);
+    const auth = await getAuth(ctx);
+    if (!auth) {
+      return null;
+    }
+    const { orgId } = auth;
     return await ctx.db
         .query("plugins")
         .withIndex("by_organization_id_and_service", (q) =>
