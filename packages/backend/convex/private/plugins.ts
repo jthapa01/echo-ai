@@ -46,12 +46,12 @@ export const getOne = query({
     }
     const { orgId } = auth;
     return await ctx.db
-        .query("plugins")
-        .withIndex("by_organization_id_and_service", (q) =>
-          q.eq("organizationId", orgId).eq("service", args.service)
-        )
-        .unique();
-  }
+      .query("plugins")
+      .withIndex("by_organization_id_and_service", (q) =>
+        q.eq("organizationId", orgId).eq("service", args.service)
+      )
+      .unique();
+  },
 });
 
 // convex/
