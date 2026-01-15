@@ -1,13 +1,17 @@
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
-import { requireAuth } from "../lib/auth";
+import { getAuth } from "../lib/auth";
 
 export const getOneByConversationId = query({
   args: {
     conversationId: v.id("conversations"),
   },
   handler: async (ctx, args) => {
-    const { orgId } = await requireAuth(ctx);
+    const auth = await getAuth(ctx);
+    if (!auth) {
+      return null;
+    }
+    const { orgId } = auth;
 
     const conversation = await ctx.db.get(args.conversationId);
 
