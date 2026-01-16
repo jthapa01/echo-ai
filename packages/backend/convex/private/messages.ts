@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { action, mutation, query } from "../_generated/server";
-import { components } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import { supportAgent } from "../system/ai/agents/supportAgent";
 import { paginationOptsValidator } from "convex/server";
 import { saveMessage } from "@convex-dev/agent";
@@ -14,8 +14,17 @@ export const enhanceResponse = action({
     prompt: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { orgId } = await requireAuth(ctx);
 
+    const subsription = await ctx.runQuery(internal.system.subscriptions.getByOrganizationId, { organizationId: orgId,});
+
+    // "active" status means a Pro (paid) subscription, not free tier
+    if (subsription?.status !== "active") {
+      throw new ConvexError({
+        code: "PAYMENT_REQUIRED",
+        message: "Active subscription required to enhance messages.",
+      });
+    }
     // Call the AI service to enhance the response
     const response = await generateText({
       model: openai("gpt-4o-mini"),

@@ -7,6 +7,7 @@ import { escalateConversationTool } from "../system/ai/tools/escalateConversatio
 import { resolveConversationTool } from "../system/ai/tools/resolveConversation";
 import { saveMessage } from "@convex-dev/agent";
 import { searchTool } from "../system/ai/tools/search";
+import { IngestEndpointTransformationOutSerializer } from "svix/dist/models/ingestEndpointTransformationOut";
 
 export const create = action({
     args: {
@@ -46,8 +47,14 @@ export const create = action({
             });
         }
 
-        // TODO: Implement subscription check here
-        const shouldTriggerAgent = conversation.status === "unresolved";
+        // Refresh the user's session if within the threshold
+        await ctx.runMutation(internal.system.contactSessions.refresh, { contactSessionId: args.contactSessionId });
+        
+        const subscription = await ctx.runQuery(internal.system.subscriptions.getByOrganizationId, {
+            organizationId: conversation.organizationId,
+        });
+
+        const shouldTriggerAgent = conversation.status === "unresolved" && subscription?.status === "active";
         //This sends a message to the AI agent and gets a response.
         if(shouldTriggerAgent) {
             await supportAgent.generateText(

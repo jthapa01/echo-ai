@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as constants from "../constants.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_extractTextContent from "../lib/extractTextContent.js";
@@ -47,6 +48,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  constants: typeof constants;
   http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/extractTextContent": typeof lib_extractTextContent;

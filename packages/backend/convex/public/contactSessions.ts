@@ -1,7 +1,6 @@
+import { SESSION_DURATION_MS } from './../constants';
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
-
-const SESSSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export const create = mutation({
   args: {
@@ -26,7 +25,7 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, { name, email, organizationId, metadata }) => {
-    const expiresAt = Date.now() + SESSSION_DURATION_MS;
+    const expiresAt = Date.now() + SESSION_DURATION_MS;
     const contactSessionId = await ctx.db.insert("contactSessions", {
       name: name,
       email: email,
