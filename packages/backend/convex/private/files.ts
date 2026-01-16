@@ -13,6 +13,7 @@ import rag from "../system/ai/rag";
 import { Id } from "../_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
 import { getAuth, requireAuth } from "../lib/auth";
+import { internal } from "../_generated/api";
 
 function guessMimeType(filename: string, bytes: ArrayBuffer): string {
   return (
@@ -72,6 +73,14 @@ export const addFile = action({
   handler: async (ctx, args) => {
     const { orgId } = await requireAuth(ctx);
 
+    const subscription = await ctx.runQuery(internal.system.subscriptions.getByOrganizationId, { organizationId: orgId, });
+    if (subscription?.status !== "active") {
+      throw new ConvexError({
+        code: "PAYMENT_REQUIRED",
+        message: "Active subscription required to upload files.",
+      });
+    };
+    
     const { bytes, filename, category } = args;
     const mimeType = args.mimeType || guessMimeType(filename, bytes);
     const blob = new Blob([bytes], { type: mimeType });
