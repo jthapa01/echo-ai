@@ -1,0 +1,12 @@
+{
+    "extends": "@workspace/typescript-config/base.json",
+    "compilerOptions": {
+        "lib": ["DOM", "ES2021", "DOM.Iterable"],
+        "module": "ESNext",
+        "target": "ES2021",
+        "moduleResolution": "bundler",
+        "noEmit": true,
+        "skipLibCheck": true,
+    },
+    "include": ["embed.ts", "vite-config.ts", "vite-env.d.ts", "*.ts", "**/*.ts"]
+}
