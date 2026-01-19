@@ -7,6 +7,10 @@
       "dest": "/echo-widget.iife.js"
     },
     {
+      "src": "/",
+      "dest": "/echo-widget.iife.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
