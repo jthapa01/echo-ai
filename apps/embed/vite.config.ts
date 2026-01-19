@@ -4,7 +4,7 @@ import { resolve } from "path";
 export default defineConfig({
     build: {
         lib: {
-            entry: resolve(__dirname, "src/embed.ts"),
+            entry: resolve(__dirname, "embed.ts"),
             name: "EchoWidget",
             fileName: "echo-widget",
             formats: ["iife"], // immediately invoke function expression
